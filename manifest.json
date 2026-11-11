@@ -1,0 +1,16 @@
+{
+  "name": "FOCUS — Gamified Timer",
+  "short_name": "FOCUS",
+  "description": "A gamified focus timer with XP, levels, streaks, and daily goals.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f2f6fa",
+  "theme_color": "#007AFF",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

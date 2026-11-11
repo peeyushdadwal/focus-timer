@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FOCUS — Gamified Timer</title>
+<meta name="description" content="A gamified focus timer with XP, levels, streaks, and daily goals.">
+<meta name="theme-color" content="#007AFF">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Poppins:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/responsive.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+</head>
+<body data-font="poppins">
+<div class="noise-overlay"></div>
+<canvas id="confettiCanvas" aria-hidden="true"></canvas>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<div class="app">
+
+    <div class="real-time-clock" id="realTimeClock">
+        <span id="clockText">12:00 PM</span>
+        <span class="streak-pill" id="streakPill" style="display:none">
+            <span class="material-icons-round">local_fire_department</span>
+            <span id="streakCount">0</span>
+        </span>
+    </div>
+
+    <div class="hud-item hud-top-left">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span class="level-badge" id="levelText">LVL 1</span>
+        </div>
+        <div class="xp-bar-container"><div class="xp-bar-fill" id="xpBar"></div></div>
+        <span class="xp-text-detail" id="xpDetail">0 / 100 XP</span>
+    </div>
+
+    <div class="hud-item hud-top-right">
+        <span class="material-icons-round" style="color:#FFCC00">bolt</span>
+        <span class="total-xp-display" id="totalXpDisplay">0</span>
+    </div>
+
+    <button type="button" class="icon-btn hud-settings" onclick="Focus.toggleModal('settingsModal', true)" aria-label="Open settings">
+        <span class="material-icons-round">tune</span>
+    </button>
+
+    <button type="button" class="icon-btn hud-sound" id="soundBtn" onclick="Focus.toggleSound()" aria-label="Toggle sound">
+        <span class="material-icons-round" id="soundIcon">volume_up</span>
+    </button>
+
+    <button type="button" class="icon-btn hud-history" id="historyBtn" onclick="Focus.toggleHistory()" aria-label="Toggle session history">
+        <span class="material-icons-round" id="historyIcon">history</span>
+        <span class="badge-dot"></span>
+    </button>
+
+    <div class="stage-container">
+        <div class="timer-ring-wrapper">
+            <svg class="ring-svg" viewBox="0 0 440 440" aria-hidden="true">
+                <circle class="ring-circle-bg" cx="220" cy="220" r="200"></circle>
+                <circle class="ring-circle-fg" id="ringProgress" cx="220" cy="220" r="200"></circle>
+            </svg>
+            <div class="center-content">
+                <div class="kaomoji-face" id="kaomoji" aria-hidden="true">(・_・)</div>
+                <div class="timer-digits" id="timeDisplay">00:00.00</div>
+                <div class="session-xp-gain" id="sessionXpDisplay">+0 XP</div>
+                <div class="goal-progress-text" id="goalProgressText"></div>
+            </div>
+        </div>
+
+        <div class="controls-wrapper">
+            <button class="btn-ghost" id="btnReset" onclick="Focus.resetTimer()">Reset</button>
+            <button class="btn-main" id="btnToggle" onclick="Focus.toggleTimer()" aria-label="Start timer">
+                <span class="material-icons-round" style="font-size:2.3rem;">play_arrow</span>
+            </button>
+            <div style="width:76px;"></div>
+        </div>
+    </div>
+
+    <div class="lap-container" id="lapList" role="region" aria-label="Session history"></div>
+
+    <!-- Settings modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Studio</h2>
+                <button class="close-btn" onclick="Focus.toggleModal('settingsModal', false)" aria-label="Close"><span class="material-icons-round">close</span></button>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Daily goal</span>
+                <div class="goal-row">
+                    <div class="stepper">
+                        <button type="button" onclick="Focus.adjustGoal(-5)" aria-label="Decrease goal">−</button>
+                        <input class="session-input" id="goalInput" type="number" min="5" step="5" value="25" oninput="Focus.setGoalFromInput(this.value)">
+                        <button type="button" onclick="Focus.adjustGoal(5)" aria-label="Increase goal">+</button>
+                    </div>
+                    <span style="color:var(--text-sub); font-size:0.88rem;">minutes / day</span>
+                </div>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Accent</span>
+                <div class="theme-grid" id="colorGrid"></div>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Background</span>
+                <div class="pill-group" id="bgGroup">
+                    <button class="pill-btn" onclick="Focus.setBg('mesh')" id="bg-mesh">Mesh</button>
+                    <button class="pill-btn" onclick="Focus.setBg('space')" id="bg-space">Space</button>
+                    <button class="pill-btn" onclick="Focus.setBg('zen')" id="bg-zen">Zen</button>
+                    <button class="pill-btn" onclick="Focus.setBg('sunset')" id="bg-sunset">Sunset</button>
+                    <button class="pill-btn" onclick="Focus.setBg('grid')" id="bg-grid">Grid</button>
+                    <button class="pill-btn" onclick="Focus.setBg('dots')" id="bg-dots">Dots</button>
+                    <button class="pill-btn" onclick="Focus.setBg('hex')" id="bg-hex">Hex</button>
+                    <button class="pill-btn" onclick="Focus.setBg('flow')" id="bg-flow">Flow</button>
+                </div>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Texture</span>
+                <div class="pill-group">
+                    <button class="pill-btn" onclick="Focus.setTexture('clean')" id="tex-clean">Clean</button>
+                    <button class="pill-btn" onclick="Focus.setTexture('grain')" id="tex-grain">Grain</button>
+                    <button class="pill-btn" onclick="Focus.setTexture('crt')" id="tex-crt">CRT</button>
+                    <button class="pill-btn" onclick="Focus.setTexture('fabric')" id="tex-fabric">Fabric</button>
+                </div>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Font</span>
+                <div class="pill-group">
+                    <button class="pill-btn" onclick="Focus.setFont('poppins')" id="font-poppins">Modern</button>
+                    <button class="pill-btn" onclick="Focus.setFont('mono')" id="font-mono">Tech</button>
+                    <button class="pill-btn" onclick="Focus.setFont('serif')" id="font-serif">Classic</button>
+                    <button class="pill-btn" onclick="Focus.setFont('hand')" id="font-hand">Hand</button>
+                </div>
+            </div>
+
+            <div class="modal-section section-divider" style="display:flex; flex-direction:column; gap:14px;">
+                <div class="toggle-row" onclick="Focus.toggleMs()">
+                    <span>Show milliseconds</span>
+                    <div class="toggle-switch" id="msToggle"></div>
+                </div>
+                <div class="toggle-row" onclick="Focus.toggleSound()">
+                    <span>Sound effects</span>
+                    <div class="toggle-switch" id="soundToggle"></div>
+                </div>
+            </div>
+
+            <div class="modal-section section-divider">
+                <span class="modal-section-title">Shortcuts</span>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div class="kbd-row"><span>Start / pause</span><span class="kbd">Space</span></div>
+                    <div class="kbd-row"><span>Close dialogs</span><span class="kbd">Esc</span></div>
+                    <div class="kbd-row"><span>Toggle history</span><span class="kbd">H</span></div>
+                </div>
+            </div>
+
+            <div class="modal-section" style="display:flex; flex-direction:column; gap:12px;">
+                <button class="btn-block" onclick="Focus.toggleThemeMode()" id="themeModeBtn" style="background:var(--text-main); color:var(--card-bg)">Switch theme</button>
+                <button class="btn-block" style="background:transparent; color:var(--text-sub); border:1px solid var(--border)" onclick="Focus.exportHistory()">Export history (.json)</button>
+                <button class="btn-block" style="background:transparent; color:var(--danger); border:1px solid var(--danger)" onclick="Focus.clearAllData()">Reset all data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session summary modal -->
+    <div class="modal-overlay" id="summaryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="summaryTitle">Session complete!</h2>
+                <button class="close-btn" onclick="Focus.dismissSession()" aria-label="Close"><span class="material-icons-round">close</span></button>
+            </div>
+
+            <div class="input-group">
+                <label class="modal-label" for="sessionNameInput">Session name</label>
+                <input type="text" class="session-input" id="sessionNameInput" placeholder="e.g. Chp 3 (Derivations)" maxlength="60">
+            </div>
+
+            <div class="summary-stats">
+                <div class="stat-box"><span class="stat-val" id="sumDuration">00:00</span><span class="stat-label">Duration</span></div>
+                <div class="stat-box"><span class="stat-val" id="sumXP" style="color:var(--success)">+0</span><span class="stat-label">XP gained</span></div>
+            </div>
+
+            <div style="text-align:center; font-size:0.88rem; color:var(--text-sub)" id="sumTimes">12:00 PM - 12:30 PM</div>
+            <div style="text-align:center; font-size:0.9rem; font-weight:600;"><span id="sumLevels"></span></div>
+
+            <div>
+                <button class="btn-block" onclick="Focus.saveSession()">Save to history</button>
+                <button class="dismiss-link" onclick="Focus.dismissSession()">Dismiss (don't save)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session detail / edit modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">View record</h2>
+                <button class="close-btn" onclick="Focus.toggleModal('detailModal', false)" aria-label="Close"><span class="material-icons-round">close</span></button>
+            </div>
+            <input type="hidden" id="editId">
+            <div class="input-group">
+                <label class="modal-label" for="editNameInput">Name</label>
+                <input type="text" class="session-input" id="editNameInput" maxlength="60">
+            </div>
+            <div class="summary-stats">
+                <div class="stat-box"><span class="stat-val" id="detDuration">--</span><span class="stat-label">Duration</span></div>
+                <div class="stat-box"><span class="stat-val" id="detXP">--</span><span class="stat-label">XP</span></div>
+            </div>
+            <div style="text-align:center; font-size:0.83rem; color:var(--text-sub)" id="detDateTime">--</div>
+            <div id="detLevels" style="text-align:center; font-size:0.9rem; font-weight:600; color:var(--primary);">--</div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button class="btn-block" onclick="Focus.updateHistoryItem()">Update</button>
+                <button class="btn-block" style="background:transparent; border:1px solid var(--danger); color:var(--danger)" onclick="Focus.deleteHistoryItem()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- App scripts — order matters: state first, app.js boots everything last -->
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/xp.js"></script>
+<script src="js/history.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

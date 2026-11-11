@@ -1,0 +1,119 @@
+/* ==========================================================================
+   FOCUS — layout.css
+   App shell, HUD positioning, and the central timer stage.
+   ========================================================================== */
+
+.app { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+/* --- Real-time clock + streak --- */
+.real-time-clock {
+    position: absolute; bottom: calc(28px + var(--safe-b)); left: 50%; transform: translateX(-50%);
+    font-size: 1.2rem; font-weight: 500; color: var(--text-sub);
+    letter-spacing: 0.5px; z-index: 10; opacity: 0.85;
+    background: var(--glass); padding: 7px 16px; border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+}
+.streak-pill {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.95rem; color: #FF9500; font-weight: 600;
+    padding-left: 8px; border-left: 1px solid var(--border);
+}
+.streak-pill .material-icons-round { font-size: 16px; }
+
+/* --- HUD pills (top corners) --- */
+.hud-item {
+    position: absolute; background: var(--glass);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    padding: 12px 22px; border-radius: 50px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06); z-index: 100;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.hud-top-left { top: calc(28px + var(--safe-t)); left: calc(28px + var(--safe-l)); flex-direction: column; align-items: flex-start; gap: 5px; border-radius: 22px; min-width: 150px; }
+.hud-top-right { top: calc(28px + var(--safe-t)); right: calc(28px + var(--safe-r)); }
+
+/* --- Round icon buttons (bottom corners) --- */
+.icon-btn {
+    position: absolute; cursor: pointer; padding: 0;
+    border-radius: 50%; width: 54px; height: 54px;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 101; background: var(--glass); border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    color: var(--text-main);
+}
+.icon-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+.icon-btn:active { transform: scale(0.94); }
+
+.hud-settings { bottom: calc(28px + var(--safe-b)); left: calc(28px + var(--safe-l)); }
+.hud-settings:hover { transform: scale(1.08) rotate(70deg); }
+.hud-sound { bottom: calc(28px + var(--safe-b)); left: calc(96px + var(--safe-l)); }
+.hud-history { bottom: calc(28px + var(--safe-b)); right: calc(28px + var(--safe-r)); }
+
+.icon-btn .badge-dot {
+    position: absolute; top: 6px; right: 6px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--primary); border: 2px solid var(--card-bg);
+    display: none;
+}
+.icon-btn.has-items .badge-dot { display: block; }
+
+/* --- XP readouts --- */
+.xp-bar-container { width: 128px; height: 6px; background: rgba(128,128,128,0.2); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+.xp-bar-fill { height: 100%; background: #FFCC00; width: 0%; transition: width 0.6s cubic-bezier(.22,1,.36,1); }
+.level-badge { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+.xp-text-detail { font-size: 0.72rem; color: var(--text-sub); font-weight: 500; }
+.total-xp-display { font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+
+/* --- Timer stage --- */
+.stage-container { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 0 16px; }
+
+.timer-ring-wrapper {
+    position: relative; width: var(--ring-size); height: var(--ring-size);
+    max-width: calc(100vw - 48px);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.ring-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-circle-bg { fill: none; stroke: var(--text-sub); opacity: 0.12; stroke-width: 14; }
+.ring-circle-fg {
+    fill: none; stroke: var(--primary); stroke-width: 14; stroke-linecap: round;
+    stroke-dasharray: 1256; stroke-dashoffset: 1256;
+    filter: drop-shadow(0 0 15px rgba(var(--primary-rgb), 0.4));
+    will-change: stroke-dashoffset;
+    transition: stroke 0.3s;
+}
+
+.center-content { z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 12px; }
+.kaomoji-face {
+    font-size: clamp(2.1rem, 8vmin, 4rem); font-weight: 600; color: var(--text-main);
+    margin-bottom: 8px; white-space: nowrap; line-height: 1;
+}
+.timer-digits {
+    font-size: clamp(2rem, 9vmin, 3.5rem); font-weight: 600; color: var(--text-main);
+    font-variant-numeric: tabular-nums; letter-spacing: -1px; line-height: 1;
+}
+.session-xp-gain { font-size: 1rem; color: var(--success); font-weight: 700; height: 22px; opacity: 0; transition: opacity 0.3s; margin-top: 4px; }
+.goal-progress-text { font-size: 0.78rem; color: var(--text-sub); margin-top: 6px; opacity: 0; transition: opacity 0.3s; }
+.goal-progress-text.visible { opacity: 1; }
+
+.controls-wrapper { margin-top: clamp(16px, 3.5vh, 30px); display: flex; align-items: center; gap: 24px; z-index: 50; }
+
+/* --- Floating XP gain --- */
+.floating-points {
+    position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 1.5rem; font-weight: 800; color: #FFCC00;
+    animation: floatUp 1.5s ease-out forwards; pointer-events: none;
+    text-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 200;
+}
+@keyframes floatUp {
+    0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -40px) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -90px) scale(1); }
+}
+
+#confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 300; }
