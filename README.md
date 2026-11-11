@@ -19,8 +19,8 @@ plain HTML/CSS/JS with no bundler.
 
 ```
 focus-timer/
-├── index.html            Markup only — all styling and logic are external
-├── manifest.json         Web app manifest (installable as a PWA shell)
+├── index.html             Markup only — all styling and logic are external
+├── manifest.json          Web app manifest (installable as a PWA shell)
 ├── css/
 │   ├── base.css           CSS variables, resets, theme/background/font presets
 │   ├── layout.css         App shell, HUD, and the central timer stage
@@ -28,11 +28,11 @@ focus-timer/
 │   └── responsive.css     Breakpoints for mobile, very narrow, and landscape
 ├── js/
 │   ├── state.js           Shared `Focus` namespace, state shape, persistence
-│   ├── ui.js               Theme application, settings sync, toasts, sound, confetti
-│   ├── timer.js            Timer start/pause/reset, progress ring, daily goal
-│   ├── xp.js                Leveling formula, XP awarding, streak tracking
-│   ├── history.js          Session summary modal, history CRUD, JSON export
-│   └── app.js               Boots the app once the DOM is ready
+│   ├── ui.js              Theme application, settings sync, toasts, sound, confetti
+│   ├── timer.js           Timer start/pause/reset, progress ring, daily goal
+│   ├── xp.js              Leveling formula, XP awarding, streak tracking
+│   ├── history.js         Session summary modal, history CRUD, JSON export
+│   └── app.js             Boots the app once the DOM is ready
 └── assets/
     └── favicon.svg
 ```
